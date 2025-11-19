@@ -269,7 +269,8 @@
                 <div class="flex items-center gap-8 flex-1">
                     <!-- Logo -->
                     <div class="flex items-center">
-                        <img src="t-business.png" alt="Т-Бизнес" class="h-9 w-auto">
+                        <img src="assets/t-business.png" alt="Т-Бизнес" class="h-9 w-auto hidden md:block">
+                        <img src="assets/t-business-short.png" alt="Т-Бизнес" class="h-9 w-auto block md:hidden">
                     </div>
                     <!-- Menu Tabs -->
                     <div class="flex items-center gap-6 h-full">
@@ -326,7 +327,7 @@
         <!-- Main Content -->
         <div class="max-w-[1286px] mx-auto">
             <!-- Settings Panel -->
-            <aside class="w-full border-b border-gray-200 bg-gray-50" style="height: calc(100vh - 128px); overflow-y: auto;">
+            <aside class="w-full border-b border-gray-200 bg-transparent" style="height: calc(100vh - 128px); overflow-y: auto;">
                 <div class="p-4 md:p-6">
                     <div class="mb-6">
                         <div class="mb-6 flex items-center justify-between">
@@ -642,10 +643,15 @@
                     <div class="group relative rounded-lg border border-gray-200 bg-white p-6 hover:shadow-md transition-all cursor-pointer" onclick="openEditModal('${actualLink.id}')">
                         <!-- Top section: URL and Status -->
                         <div class="flex items-start justify-between mb-4">
-                            <a href="#" onclick="event.preventDefault(); event.stopPropagation(); openPreview('${actualLink.id}'); return false;" 
-                               class="text-blue-600 hover:text-blue-800 text-sm font-normal hover:underline leading-5" title="${displayUrl}">
-                                ${truncatedUrl}
-                            </a>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                </svg>
+                                <a href="#" onclick="event.preventDefault(); event.stopPropagation(); openPreview('${actualLink.id}'); return false;" 
+                                   class="text-blue-600 hover:text-blue-800 text-sm font-normal hover:underline leading-5" title="${displayUrl}">
+                                    ${truncatedUrl}
+                                </a>
+                            </div>
                             <div class="flex items-center gap-1.5 px-2 py-1 rounded bg-gray-100">
                                 <div class="w-2 h-2 rounded-full ${statusColor} flex-shrink-0"></div>
                                 <span class="text-xs font-normal text-gray-900 leading-4 whitespace-nowrap">${statusText}</span>
