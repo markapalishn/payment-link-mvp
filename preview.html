@@ -424,7 +424,7 @@
                     <div class="p-4 md:p-6 flex flex-col">
                         <div class="space-y-6">
                             <div>
-                                <h2 class="text-[32px] font-medium text-black leading-tight">${link.merchantName}</h2>
+                                <h2 class="text-[40px] font-normal text-black leading-tight">${link.merchantName}</h2>
                             </div>
                         ${link.description ? `
                             <div class="-mt-2">
@@ -460,7 +460,7 @@
                                 ${link.amountMode === 'fixed' ? 'Сумма к оплате' : 'Введите сумму'}
                             </label>
                             ${link.amountMode === 'fixed' ? `
-                                <div class="text-2xl font-semibold text-black md:text-3xl">
+                                <div class="text-2xl font-medium text-black md:text-3xl">
                                     ${(link.fixedAmount || 0).toLocaleString('ru-RU')} ₽
                                 </div>
                             ` : `
@@ -490,7 +490,7 @@
                     : (freeAmount || 0);
                 
                 return `
-                    <div class="rounded-lg border border-gray-200 bg-white shadow-lg animate-in overflow-hidden" style="animation: scaleIn 0.3s ease-out;">
+                    <div class="rounded-[24px] border border-gray-200 bg-white animate-in overflow-hidden" style="animation: scaleIn 0.3s ease-out;">
                         <div class="payment-header">
                             <div class="payment-header-brand">
                                 <div class="payment-header-logo">
@@ -505,17 +505,19 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="p-6 md:p-8">
-                            <div class="flex flex-col items-center justify-center space-y-4 text-center">
+                        <div class="p-4 md:p-6 flex flex-col">
+                            <div class="flex flex-col items-center justify-center space-y-4 text-center flex-grow">
                                 <div class="rounded-full bg-green-100 p-3 md:p-4">
                                     <svg class="h-10 w-10 text-green-600 md:h-12 md:w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                     </svg>
                                 </div>
-                                <h2 class="text-xl font-semibold text-black md:text-2xl">Оплата прошла успешно</h2>
-                                <p class="text-sm text-gray-500 md:text-base">Спасибо за оплату! Ваш платёж обработан.</p>
+                                <h2 class="text-xl font-medium text-black md:text-2xl">Оплата прошла успешно</h2>
+                                <p class="text-sm text-gray-500 md:text-base">Спасибо за оплату! Ваш платёж обработан</p>
+                            </div>
+                            <div class="flex justify-center mt-6">
                                 <button onclick="isPaid = false; showPaymentForm = false; freeAmount = 0; renderPreview();" 
-                                    class="mt-4 rounded-xl bg-blue-500 px-6 py-3 text-base font-semibold text-white transition-all hover:bg-blue-600 active:scale-95 shadow-md hover:shadow-lg md:py-4 md:text-lg">
+                                    class="rounded-xl bg-yellow-400 px-6 py-4 text-base font-normal text-black transition-all hover:bg-yellow-300 active:scale-95 shadow-md hover:shadow-lg md:text-lg" style="min-width: 328px;">
                                     Оплатить еще раз
                                 </button>
                             </div>
