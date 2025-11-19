@@ -639,10 +639,10 @@
                 const truncatedUrl = displayUrl.length > 30 ? displayUrl.substring(0, 30) + '...' : displayUrl;
                 
                 return `
-                    <div class="group relative rounded-lg border border-gray-200 bg-white p-6 hover:shadow-md transition-all cursor-pointer">
+                    <div class="group relative rounded-lg border border-gray-200 bg-white p-6 hover:shadow-md transition-all cursor-pointer" onclick="openEditModal('${actualLink.id}')">
                         <!-- Top section: URL and Status -->
                         <div class="flex items-start justify-between mb-4">
-                            <a href="#" onclick="event.preventDefault(); openPreview('${actualLink.id}'); return false;" 
+                            <a href="#" onclick="event.preventDefault(); event.stopPropagation(); openPreview('${actualLink.id}'); return false;" 
                                class="text-blue-600 hover:text-blue-800 text-sm font-normal hover:underline leading-5" title="${displayUrl}">
                                 ${truncatedUrl}
                             </a>
