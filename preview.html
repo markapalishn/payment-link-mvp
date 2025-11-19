@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ru" style="color-scheme: light;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>Предпросмотр платёжной ссылки</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <style>
+        @font-face {
+            font-family: 'T-Sans';
+            src: url('Fonts/T-Sans_Regular.otf') format('opentype');
+            font-weight: 400;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'T-Sans';
+            src: url('Fonts/T-Sans_Medium.otf') format('opentype');
+            font-weight: 500;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'T-Sans';
+            src: url('Fonts/T-Sans_Bold.otf') format('opentype');
+            font-weight: 700;
+            font-style: normal;
+        }
+        * {
+            font-family: 'T-Sans', system-ui, -apple-system, sans-serif;
+        }
+        html {
+            color-scheme: light;
+        }
+        @media (prefers-color-scheme: dark) {
+            html {
+                color-scheme: light !important;
+            }
+            body {
+                background-color: #FFFFFF !important;
+                color: #000000 !important;
+            }
+        }
+        :root {
+            --tui-background-base-alt: #f6f7f8;
+            --tui-border-normal: rgba(0, 16, 36, 0.12);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        #previewContent input:focus,
+        #previewContent textarea:focus,
+        #previewContent .preview-input:focus {
+            border-color: #DED0BB !important;
+            box-shadow: 0 0 0 2px rgba(222, 208, 187, 0.2) !important;
+        }
+        #previewContainer {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: flex-start !important;
+            width: 100% !important;
+        }
+        .payment-header {
+            background-color: var(--tui-background-base-alt);
+            border-bottom: 1px solid var(--tui-border-normal);
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .payment-header-brand {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            flex: 0 1 auto;
+            min-width: 94px;
+            height: 32px;
+        }
+        .payment-header-logo {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            height: 32px;
+        }
+        .payment-header-logo img {
+            height: 100%;
+            width: auto;
+            display: block;
+        }
+        .payment-header-flag {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 32px;
+            padding: 4px 8px;
+            background-color: rgba(36, 74, 127, 0.06);
+            border-radius: 100px;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .payment-header-flag:hover {
+            background-color: rgba(36, 74, 127, 0.1);
+        }
+        .payment-header-flag-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .payment-header-flag-stripe {
+            position: absolute;
+            left: 0;
+            right: 0;
+        }
+        .payment-header-flag-stripe.white {
+            top: 0;
+            height: 33.33%;
+            background: #ffffff;
+        }
+        .payment-header-flag-stripe.blue {
+            top: 33.33%;
+            height: 33.33%;
+            background: #0052b4;
+        }
+        .payment-header-flag-stripe.red {
+            bottom: 0;
+            height: 33.33%;
+            background: #d80027;
+        }
+    </style>
+</head>
+<body class="bg-white min-h-screen">
+    <div id="app">
+        <!-- Main Content -->
+        <div class="max-w-[1286px] mx-auto py-4">
+            <!-- View Mode Switcher -->
+            <div class="mb-4 flex items-center justify-between px-4 md:px-6">
+                <h2 class="text-lg font-semibold text-black">Предпросмотр</h2>
+                <div class="flex gap-2 rounded-lg border border-gray-200 bg-white p-1" id="viewModeSwitcher">
+                    <button onclick="setViewMode('desktop')" class="view-mode-btn rounded-md px-3 py-1.5 text-sm font-medium transition-colors text-black" data-mode="desktop" style="background-color: #DED0BB;">
+                        Компьютер
+                    </button>
+                    <button onclick="setViewMode('mobile')" class="view-mode-btn rounded-md px-3 py-1.5 text-sm font-medium transition-colors text-black hover:bg-gray-100" data-mode="mobile">
+                        Телефон
+                    </button>
+                </div>
+            </div>
+            <div class="flex items-center justify-center min-h-[400px] w-full" id="previewContainer">
+                <div id="previewContent" class="transition-all duration-300"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Base64 encoded T-Bank logo
+        const tBankLogoBase64 = 'data:image/png;base64,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';
+
+        // Get link ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const linkId = urlParams.get('id');
+
+        // Load links from localStorage
+        let links = JSON.parse(localStorage.getItem('paymentLinks') || '[]');
+        let link = links.find(l => l.id === linkId);
+
+        // If no link found, use demo data
+        if (!link) {
+            link = {
+                id: linkId || 'demo',
+                title: 'Оплата консультации',
+                merchantName: 'Суши-бар Сакура',
+                amountMode: 'fixed',
+                fixedAmount: 1990,
+                description: 'Оплата консультации',
+                status: 'ready',
+                url: 'https://payment.example.com/link/demo',
+                collectEmail: false,
+                emailRequired: false,
+                collectPhone: false,
+                phoneRequired: false
+            };
+        }
+
+        let viewMode = localStorage.getItem('previewViewMode') || 'desktop';
+        let showPaymentForm = false;
+        let selectedPaymentMethod = null;
+        let cardData = { number: '', expiry: '', cvc: '', name: '' };
+        let isPaid = false;
+        let freeAmount = 0;
+
+        function setViewMode(mode) {
+            viewMode = mode;
+            localStorage.setItem('previewViewMode', viewMode);
+            updateViewModeButtons();
+            renderPreview();
+        }
+
+        function updateViewModeButtons() {
+            document.querySelectorAll('.view-mode-btn').forEach(btn => {
+                if (btn.dataset.mode === viewMode) {
+                    btn.style.backgroundColor = '#DED0BB';
+                    btn.classList.add('text-black');
+                    btn.classList.remove('text-white', 'hover:bg-gray-100');
+                } else {
+                    btn.style.backgroundColor = '';
+                    btn.classList.remove('text-black');
+                    btn.classList.add('text-black', 'hover:bg-gray-100');
+                }
+            });
+        }
+
+        function formatAmount(value) {
+            const numericValue = value.toString().replace(/\D/g, '');
+            if (numericValue === '') return '';
+            const formatted = parseInt(numericValue, 10).toLocaleString('ru-RU');
+            return formatted + ' ₽';
+        }
+
+        function parseAmount(formattedValue) {
+            const numericValue = formattedValue.toString().replace(/\D/g, '');
+            return numericValue === '' ? 0 : parseInt(numericValue, 10);
+        }
+
+        function handleAmountInput(event) {
+            const input = event.target;
+            const cursorPosition = input.selectionStart;
+            const oldValue = input.value;
+            const numericValue = oldValue.replace(/\D/g, '');
+            
+            const beforeCursor = oldValue.substring(0, cursorPosition);
+            const digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
+            
+            const formatted = formatAmount(numericValue);
+            input.value = formatted;
+            freeAmount = parseAmount(formatted);
+            
+            let newCursorPosition = 0;
+            let digitsCount = 0;
+            for (let i = 0; i < formatted.length; i++) {
+                if (/\d/.test(formatted[i])) {
+                    digitsCount++;
+                    if (digitsCount === digitsBeforeCursor) {
+                        newCursorPosition = i + 1;
+                        break;
+                    }
+                }
+            }
+            if (digitsBeforeCursor >= numericValue.length) {
+                newCursorPosition = formatted.length;
+            }
+            
+            setTimeout(() => {
+                input.setSelectionRange(newCursorPosition, newCursorPosition);
+            }, 0);
+            
+            if (showPaymentForm) {
+                renderPreview();
+            }
+        }
+
+        function formatPhoneInput(event) {
+            const input = event.target;
+            const cursorPosition = input.selectionStart;
+            const oldValue = input.value;
+            let value = oldValue.replace(/\D/g, '');
+            
+            if (value.length > 11) {
+                value = value.slice(0, 11);
+            }
+            
+            let formatted = '';
+            if (value.length > 0) {
+                formatted = '+7';
+                if (value.length > 1) {
+                    formatted += ' (' + value.slice(1, 4);
+                    if (value.length > 4) {
+                        formatted += ') ' + value.slice(4, 7);
+                        if (value.length > 7) {
+                            formatted += '-' + value.slice(7, 9);
+                            if (value.length > 9) {
+                                formatted += '-' + value.slice(9, 11);
+                            }
+                        }
+                    } else if (value.length > 1) {
+                        formatted += ')';
+                    }
+                }
+            }
+            
+            input.value = formatted;
+            
+            const digitsBeforeCursor = oldValue.substring(0, cursorPosition).replace(/\D/g, '').length;
+            let newCursorPosition = formatted.length;
+            if (digitsBeforeCursor > 0) {
+                let digitsCount = 0;
+                for (let i = 0; i < formatted.length; i++) {
+                    if (/\d/.test(formatted[i])) {
+                        digitsCount++;
+                        if (digitsCount === digitsBeforeCursor) {
+                            newCursorPosition = i + 1;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            setTimeout(() => {
+                input.setSelectionRange(newCursorPosition, newCursorPosition);
+            }, 0);
+        }
+
+        function validatePaymentForm(collectEmail, emailRequired, collectPhone, phoneRequired, isFreeAmount) {
+            if (isFreeAmount && freeAmount === 0) {
+                console.warn('Введите сумму для оплаты');
+                return false;
+            }
+            
+            if (collectEmail) {
+                const emailInput = document.getElementById('customerEmail');
+                if (emailInput) {
+                    const emailValue = emailInput.value.trim();
+                    if (emailRequired && !emailValue) {
+                        console.warn('Пожалуйста, введите email');
+                        emailInput.focus();
+                        emailInput.style.borderColor = '#ef4444';
+                        setTimeout(() => {
+                            emailInput.style.borderColor = '';
+                        }, 2000);
+                        return false;
+                    }
+                    if (emailValue && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
+                        console.warn('Пожалуйста, введите корректный email');
+                        emailInput.focus();
+                        emailInput.style.borderColor = '#ef4444';
+                        setTimeout(() => {
+                            emailInput.style.borderColor = '';
+                        }, 2000);
+                        return false;
+                    }
+                    if (emailValue && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
+                        emailInput.style.borderColor = '';
+                    }
+                }
+            }
+            
+            if (collectPhone) {
+                const phoneInput = document.getElementById('customerPhone');
+                if (phoneInput) {
+                    const phoneValue = phoneInput.value.replace(/\D/g, '');
+                    if (phoneRequired && phoneValue.length < 11) {
+                        console.warn('Пожалуйста, введите номер телефона');
+                        phoneInput.focus();
+                        phoneInput.style.borderColor = '#ef4444';
+                        setTimeout(() => {
+                            phoneInput.style.borderColor = '';
+                        }, 2000);
+                        return false;
+                    }
+                    if (phoneValue && phoneValue.length > 0 && phoneValue.length < 11) {
+                        console.warn('Пожалуйста, введите полный номер телефона');
+                        phoneInput.focus();
+                        phoneInput.style.borderColor = '#ef4444';
+                        setTimeout(() => {
+                            phoneInput.style.borderColor = '';
+                        }, 2000);
+                        return false;
+                    }
+                    if (phoneValue.length === 11) {
+                        phoneInput.style.borderColor = '';
+                    }
+                }
+            }
+            
+            return true;
+        }
+
+        function renderPreview() {
+            const container = document.getElementById('previewContent');
+            const previewContainer = document.getElementById('previewContainer');
+
+            if (!link) {
+                container.innerHTML = '<div class="flex h-full items-center justify-center"><div class="text-center text-gray-500"><p>Ссылка не найдена</p></div></div>';
+                return;
+            }
+
+            if (previewContainer) {
+                previewContainer.style.display = 'flex';
+                previewContainer.style.justifyContent = 'center';
+                previewContainer.style.alignItems = 'flex-start';
+                previewContainer.style.width = '100%';
+                previewContainer.style.maxWidth = '100%';
+            }
+            
+            if (viewMode === 'mobile') {
+                container.style.maxWidth = '375px';
+                container.style.width = '375px';
+                container.style.margin = '0';
+                container.style.flexShrink = '0';
+            } else {
+                container.style.maxWidth = '100%';
+                container.style.width = '100%';
+                container.style.margin = '0';
+            }
+
+            if (showPaymentForm) {
+                container.innerHTML = renderPaymentForm(link);
+            } else {
+                container.innerHTML = renderPaymentPreview(link);
+            }
+            
+            setTimeout(() => {
+                const freeAmountInput = document.getElementById('freeAmount');
+                if (freeAmountInput && link.amountMode === 'free') {
+                    if (freeAmount > 0) {
+                        freeAmountInput.value = formatAmount(freeAmount.toString());
+                    } else {
+                        freeAmountInput.value = '';
+                    }
+                }
+                
+                const phoneInput = document.getElementById('customerPhone');
+                if (phoneInput) {
+                    phoneInput.removeEventListener('input', formatPhoneInput);
+                    phoneInput.addEventListener('input', formatPhoneInput);
+                }
+            }, 0);
+        }
+
+        function renderPaymentPreview(link) {
+            const displayAmount = link.amountMode === 'fixed' 
+                ? (link.fixedAmount || 0)
+                : (freeAmount || 0);
+            
+            return `
+                <div class="rounded-lg border border-gray-200 bg-white shadow-lg animate-in overflow-hidden">
+                    <div class="payment-header">
+                        <div class="payment-header-brand">
+                            <div class="payment-header-logo">
+                                <img src="${tBankLogoBase64}" alt="Т-Банк" />
+                            </div>
+                        </div>
+                        <div class="payment-header-flag" title="Русский язык">
+                            <div class="payment-header-flag-icon">
+                                <div class="payment-header-flag-stripe white"></div>
+                                <div class="payment-header-flag-stripe blue"></div>
+                                <div class="payment-header-flag-stripe red"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 md:p-6">
+                        <div class="space-y-6">
+                            <div>
+                                <h2 class="text-lg font-semibold text-black md:text-xl">${link.merchantName}</h2>
+                            </div>
+                        ${link.description ? `
+                            <div>
+                                <p class="text-sm text-gray-500">${link.description}</p>
+                            </div>
+                        ` : ''}
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-black">
+                                ${link.amountMode === 'fixed' ? 'Сумма к оплате' : 'Введите сумму'}
+                            </label>
+                            ${link.amountMode === 'fixed' ? `
+                                <div class="text-2xl font-semibold text-black md:text-3xl">
+                                    ${(link.fixedAmount || 0).toLocaleString('ru-RU')} ₽
+                                </div>
+                            ` : `
+                                <input type="text" id="freeAmount" inputmode="numeric" 
+                                    value="${freeAmount > 0 ? formatAmount(freeAmount.toString()) : ''}" 
+                                    placeholder="0 ₽" 
+                                    oninput="handleAmountInput(event)"
+                                    class="w-full rounded-lg border border-gray-200 px-4 py-3 text-lg focus:outline-none md:text-xl preview-input">
+                            `}
+                        </div>
+                        ${(link.collectEmail || false) ? `
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-black">
+                                    Email
+                                    ${(link.emailRequired || false) ? '<span class="text-red-500">*</span>' : ''}
+                                </label>
+                                <input type="email" id="customerEmail" 
+                                    placeholder="example@mail.com" 
+                                    ${(link.emailRequired || false) ? 'required' : ''}
+                                    class="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 preview-input">
+                            </div>
+                        ` : ''}
+                        ${(link.collectPhone || false) ? `
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-black">
+                                    Номер телефона
+                                    ${(link.phoneRequired || false) ? '<span class="text-red-500">*</span>' : ''}
+                                </label>
+                                <input type="tel" id="customerPhone" 
+                                    placeholder="+7 (999) 123-45-67" 
+                                    ${(link.phoneRequired || false) ? 'required' : ''}
+                                    class="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 preview-input">
+                            </div>
+                        ` : ''}
+                        <button onclick="if (validatePaymentForm(${(link.collectEmail || false)}, ${(link.emailRequired || false)}, ${(link.collectPhone || false)}, ${(link.phoneRequired || false)}, ${link.amountMode === 'free'})) { showPaymentForm = true; renderPreview(); }" 
+                            class="w-full rounded-xl bg-yellow-400 px-6 py-4 text-base font-semibold text-black transition-all hover:bg-yellow-300 active:scale-95 shadow-md hover:shadow-lg md:text-lg">
+                            Оплатить
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderPaymentForm(link) {
+            if (isPaid) {
+                const paymentAmount = link.amountMode === 'fixed' 
+                    ? (link.fixedAmount || 0)
+                    : (freeAmount || 0);
+                
+                return `
+                    <div class="rounded-lg border border-gray-200 bg-white shadow-lg animate-in overflow-hidden" style="animation: scaleIn 0.3s ease-out;">
+                        <div class="payment-header">
+                            <div class="payment-header-brand">
+                                <div class="payment-header-logo">
+                                    <img src="${tBankLogoBase64}" alt="Т-Банк" />
+                                </div>
+                            </div>
+                            <div class="payment-header-flag" title="Русский язык">
+                                <div class="payment-header-flag-icon">
+                                    <div class="payment-header-flag-stripe white"></div>
+                                    <div class="payment-header-flag-stripe blue"></div>
+                                    <div class="payment-header-flag-stripe red"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6 md:p-8">
+                            <div class="flex flex-col items-center justify-center space-y-4 text-center">
+                                <div class="rounded-full bg-green-100 p-3 md:p-4">
+                                    <svg class="h-10 w-10 text-green-600 md:h-12 md:w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </div>
+                                <h2 class="text-xl font-semibold text-black md:text-2xl">Оплата прошла успешно</h2>
+                                <p class="text-sm text-gray-500 md:text-base">Спасибо за оплату! Ваш платёж обработан.</p>
+                                <button onclick="isPaid = false; showPaymentForm = false; freeAmount = 0; renderPreview();" 
+                                    class="mt-4 w-full rounded-xl bg-blue-500 px-6 py-3 text-base font-semibold text-white transition-all hover:bg-blue-600 active:scale-95 shadow-md hover:shadow-lg md:py-4 md:text-lg">
+                                    Оплатить еще раз
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const paymentMethods = [
+                { value: 'tpay', label: 'Т-Пей', color: '#FFDD2D', textColor: '#000000' },
+                { value: 'sberpay', label: 'СберПэй', color: '#21A038', textColor: '#FFFFFF' },
+                { value: 'alfapay', label: 'АльфаПэй', color: '#EF3124', textColor: '#FFFFFF' },
+                { value: 'sbp', label: 'СБП по QR', color: '#428BF9', textColor: '#FFFFFF' },
+                { value: 'card', label: 'Банковская карта', color: '#428BF9', textColor: '#FFFFFF' }
+            ];
+
+            const paymentAmount = link.amountMode === 'fixed' 
+                ? (link.fixedAmount || 0)
+                : (freeAmount || 0);
+            
+            return `
+                <div class="rounded-lg border border-gray-200 bg-white shadow-lg animate-in slide-in overflow-hidden">
+                    <div class="payment-header">
+                        <div class="payment-header-brand">
+                            <div class="payment-header-logo">
+                                <img src="${tBankLogoBase64}" alt="Т-Банк" />
+                            </div>
+                        </div>
+                        <div class="payment-header-flag" title="Русский язык">
+                            <div class="payment-header-flag-icon">
+                                <div class="payment-header-flag-stripe white"></div>
+                                <div class="payment-header-flag-stripe blue"></div>
+                                <div class="payment-header-flag-stripe red"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 md:p-6">
+                        <div class="space-y-4 md:space-y-6">
+                            <div class="flex items-center justify-between border-b border-gray-200 pb-3 md:pb-4">
+                                <h2 class="text-lg font-semibold text-black md:text-xl">Оплата заказа</h2>
+                                <button onclick="showPaymentForm = false; isPaid = false; selectedPaymentMethod = null; renderPreview();" 
+                                    class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 active:scale-95" title="Назад">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="rounded-lg bg-gray-50 p-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-600">Сумма к оплате:</span>
+                                <span class="text-xl font-semibold text-black">${paymentAmount.toLocaleString('ru-RU')} ₽</span>
+                            </div>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500">Продавец:</span>
+                                    <span class="font-medium text-black">${link.merchantName}</span>
+                                </div>
+                                ${link.description ? `
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-500">Описание:</span>
+                                        <span class="font-medium text-black">${link.description}</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="mb-4 text-sm font-medium text-black">Способы оплаты</h3>
+                            <div class="flex flex-col gap-2" id="paymentMethods">
+                                ${paymentMethods.map(method => {
+                                    const isSelected = selectedPaymentMethod === method.value;
+                                    const selectedColor = isSelected ? method.color : method.color;
+                                    const opacity = isSelected ? '1' : '0.9';
+                                    return `
+                                    <button onclick="selectPaymentMethod('${method.value}')" 
+                                        class="w-full rounded-xl border-2 p-3 text-center font-medium transition-all active:scale-95 sm:p-4 ${isSelected ? 'shadow-lg transform scale-[1.02]' : 'hover:opacity-95'}"
+                                        style="background-color: ${selectedColor}; color: ${method.textColor}; border-color: ${selectedColor}; opacity: ${opacity}; ${isSelected ? `box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15), 0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 0 0 3px ${selectedColor}50;` : ''}">
+                                        <span class="text-sm sm:text-base font-semibold">${method.label}</span>
+                                    </button>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                        ${selectedPaymentMethod === 'sbp' ? renderSBPQR(link) : ''}
+                        ${selectedPaymentMethod === 'card' ? renderCardForm() : ''}
+                        ${selectedPaymentMethod ? renderPayButton(link) : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSBPQR(link) {
+            const qrId = 'sbpQRCode_' + Date.now();
+            const qrUrl = (link && link.url) ? link.url : 'https://payment.example.com';
+            
+            setTimeout(() => {
+                generateQRCode(qrId, qrUrl);
+            }, 100);
+            
+            return `
+                <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 md:p-6 animate-in slide-in">
+                    <div class="flex flex-col items-center justify-center space-y-4">
+                        <p class="text-center text-sm font-medium text-black">Отсканируйте QR-код для оплаты</p>
+                        <div class="rounded-lg bg-white p-3 md:p-4">
+                            <canvas id="${qrId}" class="max-w-full h-auto" width="180" height="180"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function generateQRCode(canvasId, url) {
+            const canvas = document.getElementById(canvasId);
+            if (canvas && typeof QRCode !== 'undefined') {
+                try {
+                    QRCode.toCanvas(canvas, url, {
+                        width: 180,
+                        margin: 2,
+                        color: {
+                            dark: '#000000',
+                            light: '#FFFFFF'
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error generating QR code:', error);
+                }
+            }
+        }
+
+        function renderCardForm() {
+            return `
+                <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 md:p-6 animate-in slide-in">
+                    <h3 class="mb-4 text-sm font-medium text-black">Данные карты</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-black">Номер карты</label>
+                            <input type="text" id="cardNumber" inputmode="numeric" value="${cardData.number}" 
+                                placeholder="0000 0000 0000 0000" maxlength="19"
+                                oninput="formatCardNumber(this)"
+                                class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 md:gap-4">
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-black">Срок действия</label>
+                                <input type="text" id="cardExpiry" inputmode="numeric" value="${cardData.expiry}" 
+                                    placeholder="MM/YY" maxlength="5"
+                                    oninput="formatCardExpiry(this)"
+                                    class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                            </div>
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-black">CVC</label>
+                                <input type="text" id="cardCvc" inputmode="numeric" value="${cardData.cvc}" 
+                                    placeholder="000" maxlength="3"
+                                    oninput="cardData.cvc = this.value.replace(/\\D/g, '').slice(0, 3)"
+                                    class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-black">Имя владельца</label>
+                            <input type="text" id="cardName" value="${cardData.name}" 
+                                placeholder="IVAN IVANOV"
+                                oninput="cardData.name = this.value.toUpperCase()"
+                                class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm uppercase focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderPayButton(link) {
+            const isCardValid = selectedPaymentMethod !== 'card' || 
+                (cardData.number && cardData.expiry && cardData.cvc && cardData.name);
+            
+            return `
+                <button onclick="processPayment()" 
+                    ${!isCardValid ? 'disabled' : ''}
+                    class="w-full rounded-xl px-6 py-3 text-base font-semibold text-white transition-all md:py-4 md:text-lg ${!isCardValid ? 'cursor-not-allowed bg-gray-300 opacity-50' : 'bg-blue-500 hover:bg-blue-600 active:scale-95'} shadow-md hover:shadow-lg">
+                    Оплатить
+                </button>
+            `;
+        }
+
+        function selectPaymentMethod(method) {
+            selectedPaymentMethod = method;
+            renderPreview();
+        }
+
+        function formatCardNumber(input) {
+            let value = input.value.replace(/\D/g, '').slice(0, 16);
+            cardData.number = value.replace(/(.{4})/g, '$1 ').trim();
+            input.value = cardData.number;
+        }
+
+        function formatCardExpiry(input) {
+            let value = input.value.replace(/\D/g, '').slice(0, 4);
+            cardData.expiry = value.replace(/(.{2})/, '$1/').trim();
+            input.value = cardData.expiry;
+        }
+
+        function processPayment() {
+            isPaid = true;
+            renderPreview();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateViewModeButtons();
+            renderPreview();
+        });
+    </script>
+</body>
+</html>
+
