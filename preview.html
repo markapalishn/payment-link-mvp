@@ -473,7 +473,7 @@
                         </div>
                         <div class="flex justify-center mt-6">
                             <button onclick="if (validatePaymentForm(${(link.collectEmail || false)}, ${(link.emailRequired || false)}, ${(link.collectPhone || false)}, ${(link.phoneRequired || false)}, ${link.amountMode === 'free'})) { showPaymentForm = true; renderPreview(); }" 
-                                class="rounded-xl bg-yellow-400 px-6 py-4 text-base font-normal text-black transition-all hover:bg-yellow-300 active:scale-95 shadow-md hover:shadow-lg md:text-lg" style="min-width: 328px;">
+                                class="rounded-xl bg-yellow-400 px-6 py-4 text-base font-normal text-black transition-all hover:bg-yellow-300 active:scale-95 md:text-lg" style="min-width: 328px;">
                                 Оплатить
                             </button>
                         </div>
@@ -489,7 +489,7 @@
                     : (freeAmount || 0);
                 
                 return `
-                    <div class="rounded-[24px] border border-gray-200 bg-white animate-in overflow-hidden" style="animation: scaleIn 0.3s ease-out;">
+                    <div class="rounded-[24px] border border-gray-200 bg-white animate-in overflow-hidden max-w-[412px] mx-auto" style="animation: scaleIn 0.3s ease-out;">
                         <div class="payment-header">
                             <div class="payment-header-brand">
                                 <div class="payment-header-logo">
@@ -538,7 +538,7 @@
                 : (freeAmount || 0);
             
                 return `
-                    <div class="rounded-[24px] border border-gray-200 bg-white animate-in slide-in overflow-hidden">
+                    <div class="rounded-[24px] border border-gray-200 bg-white animate-in slide-in overflow-hidden max-w-[412px] mx-auto">
                         <div class="payment-header">
                             <div class="payment-header-brand">
                                 <div class="payment-header-logo">
@@ -565,48 +565,42 @@
                                     </button>
                                 </div>
                                 <div class="rounded-lg bg-gray-50 p-4">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-sm font-medium text-gray-600">Сумма к оплате:</span>
-                                        <span class="text-xl font-semibold text-black">${paymentAmount.toLocaleString('ru-RU')} ₽</span>
-                                    </div>
-                                </div>
-                                <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                                    <div class="space-y-2">
-                                        <div class="flex justify-between text-sm">
-                                            <span class="text-gray-500">Продавец:</span>
-                                            <span class="font-medium text-black">${link.merchantName}</span>
+                                    <div class="space-y-3">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-[18px] font-normal text-gray-600">Сумма к оплате:</span>
+                                            <span class="text-[24px] font-medium text-black">${paymentAmount.toLocaleString('ru-RU')} ₽</span>
                                         </div>
-                                        ${link.description ? `
-                                            <div class="flex justify-between text-sm">
-                                                <span class="text-gray-500">Описание:</span>
-                                                <span class="font-medium text-black">${link.description}</span>
-                                            </div>
-                                        ` : ''}
+                                        <div class="flex justify-between text-[18px] border-t border-gray-200 pt-3">
+                                            <span class="text-gray-500">Продавец:</span>
+                                            <span class="font-normal text-black">${link.merchantName}</span>
+                                        </div>
                                     </div>
                                 </div>
+                                ${link.description ? `
+                                    <div class="rounded-lg bg-gray-50 p-4">
+                                        <div class="flex flex-col text-[18px]">
+                                            <span class="text-gray-500 mb-1">Описание:</span>
+                                            <span class="font-normal text-black">${link.description}</span>
+                                        </div>
+                                    </div>
+                                ` : ''}
                                 <div>
-                                    <h3 class="mb-4 text-sm font-medium text-black">Способы оплаты</h3>
                                     <div class="flex flex-col gap-2" id="paymentMethods">
                                         ${paymentMethods.map(method => {
                                             const isSelected = selectedPaymentMethod === method.value;
                                             const selectedColor = isSelected ? method.color : method.color;
                                             const opacity = isSelected ? '1' : '0.9';
                                             return `
-                                            <div class="flex justify-center">
-                                                <button onclick="selectPaymentMethod('${method.value}')" 
-                                                    class="rounded-xl border-2 px-6 py-4 text-center text-base font-normal transition-all active:scale-95 md:text-lg shadow-md hover:shadow-lg ${isSelected ? 'shadow-lg transform scale-[1.02]' : 'hover:opacity-95'}"
-                                                    style="background-color: ${selectedColor}; color: ${method.textColor}; border-color: ${selectedColor}; opacity: ${opacity}; min-width: 328px; ${isSelected ? `box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15), 0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 0 0 3px ${selectedColor}50;` : ''}">
-                                                    ${method.label}
-                                                </button>
-                                            </div>
+                                            <button onclick="selectPaymentMethod('${method.value}')" 
+                                                class="w-full rounded-xl border-2 px-6 py-4 text-center text-base font-normal transition-all active:scale-95 md:text-lg shadow-md hover:shadow-lg ${isSelected ? 'shadow-lg transform scale-[1.02]' : 'hover:opacity-95'}"
+                                                style="background-color: ${selectedColor}; color: ${method.textColor}; border-color: ${selectedColor}; opacity: ${opacity}; ${isSelected ? `box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15), 0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 0 0 3px ${selectedColor}50;` : ''}">
+                                                ${method.label}
+                                            </button>
                                             `;
                                         }).join('')}
                                     </div>
                                 </div>
-                                ${selectedPaymentMethod === 'sbp' ? renderSBPQR(link) : ''}
-                                ${selectedPaymentMethod === 'card' ? renderCardForm() : ''}
                             </div>
-                            ${selectedPaymentMethod ? renderPayButton(link) : ''}
                         </div>
                     </div>
                 </div>
@@ -709,7 +703,7 @@
 
         function selectPaymentMethod(method) {
             selectedPaymentMethod = method;
-            renderPreview();
+            processPayment();
         }
 
         function formatCardNumber(input) {
