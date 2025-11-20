@@ -189,6 +189,7 @@
         let cardData = { number: '', expiry: '', cvc: '', name: '' };
         let isPaid = false;
         let freeAmount = 0;
+        let showMoreMethods = false;
 
         function formatAmount(value) {
             const numericValue = value.toString().replace(/\D/g, '');
@@ -516,7 +517,7 @@
                             </div>
                             <div class="flex justify-center mt-6">
                                 <button onclick="isPaid = false; showPaymentForm = false; freeAmount = 0; renderPreview();" 
-                                    class="rounded-xl bg-yellow-400 px-6 py-4 text-base font-normal text-black transition-all hover:bg-yellow-300 active:scale-95 shadow-md hover:shadow-lg md:text-lg" style="min-width: 328px;">
+                                    class="rounded-xl bg-yellow-400 px-6 py-4 text-base font-normal text-black transition-all hover:bg-yellow-300 active:scale-95 md:text-lg" style="min-width: 328px;">
                                     Оплатить еще раз
                                 </button>
                             </div>
@@ -530,7 +531,7 @@
                 { value: 'sberpay', label: 'СберПэй', color: '#21A038', textColor: '#FFFFFF' },
                 { value: 'alfapay', label: 'АльфаПэй', color: '#EF3124', textColor: '#FFFFFF' },
                 { value: 'sbp', label: 'СБП по QR', color: '#428BF9', textColor: '#FFFFFF' },
-                { value: 'card', label: 'Банковская карта', color: '#428BF9', textColor: '#FFFFFF' }
+                { value: 'card', label: 'Картой', color: '#FFFFFF', textColor: '#000000' }
             ];
 
             const paymentAmount = link.amountMode === 'fixed' 
@@ -567,7 +568,7 @@
                                 <div class="rounded-lg bg-gray-50 p-4">
                                     <div class="space-y-3">
                                         <div class="flex items-center justify-between">
-                                            <span class="text-[18px] font-normal text-gray-600">Сумма к оплате:</span>
+                                            <span class="text-[18px] font-normal text-gray-500">Сумма к оплате:</span>
                                             <span class="text-[24px] font-medium text-black">${paymentAmount.toLocaleString('ru-RU')} ₽</span>
                                         </div>
                                         <div class="flex justify-between text-[18px] border-t border-gray-200 pt-3">
@@ -586,18 +587,65 @@
                                 ` : ''}
                                 <div>
                                     <div class="flex flex-col gap-2" id="paymentMethods">
-                                        ${paymentMethods.map(method => {
+                                        ${paymentMethods.filter(method => ['tpay', 'sberpay', 'alfapay'].includes(method.value)).map(method => {
                                             const isSelected = selectedPaymentMethod === method.value;
                                             const selectedColor = isSelected ? method.color : method.color;
                                             const opacity = isSelected ? '1' : '0.9';
+                                            
+                                            let buttonContent = method.label;
+                                            let buttonStyle = `background-color: ${selectedColor}; color: ${method.textColor}; border-color: ${selectedColor}; opacity: ${opacity};`;
+                                            let buttonClass = `w-full h-[44px] rounded-xl border-2 px-6 text-center flex items-center justify-center transition-all active:scale-95 ${isSelected ? 'transform scale-[1.02]' : 'hover:opacity-95'}`;
+                                            
+                                            if (method.value === 'tpay') {
+                                                buttonContent = `<img src="assets/Button Pay.png" alt="Т-Пей" class="h-[20px] w-auto">`;
+                                                buttonStyle = `background-color: ${selectedColor}; border-color: ${selectedColor}; opacity: ${opacity};`;
+                                            } else if (method.value === 'sberpay') {
+                                                buttonContent = `<img src="assets/SberPay-logo-01 2.png" alt="СберПэй" class="h-[20px] w-auto">`;
+                                                buttonStyle = `background-color: #FFFFFF; border: 1.5px solid #EAECEE; opacity: ${opacity};`;
+                                            } else if (method.value === 'alfapay') {
+                                                buttonContent = `<img src="assets/AlfaPay Full RU.png" alt="АльфаПэй" class="h-[20px] w-auto">`;
+                                                buttonStyle = `background-color: #FFFFFF; border: 1.5px solid #EAECEE; opacity: ${opacity};`;
+                                            }
+                                            
                                             return `
                                             <button onclick="selectPaymentMethod('${method.value}')" 
-                                                class="w-full rounded-xl border-2 px-6 py-4 text-center text-base font-normal transition-all active:scale-95 md:text-lg shadow-md hover:shadow-lg ${isSelected ? 'shadow-lg transform scale-[1.02]' : 'hover:opacity-95'}"
-                                                style="background-color: ${selectedColor}; color: ${method.textColor}; border-color: ${selectedColor}; opacity: ${opacity}; ${isSelected ? `box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15), 0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 0 0 3px ${selectedColor}50;` : ''}">
-                                                ${method.label}
+                                                class="${buttonClass}"
+                                                style="${buttonStyle}">
+                                                ${buttonContent}
                                             </button>
                                             `;
                                         }).join('')}
+                                        ${!showMoreMethods ? `
+                                            <button class="w-full min-h-[32px] flex items-center justify-center rounded-lg px-2 py-1 transition-all active:scale-95 hover:opacity-90" 
+                                                style="background-color: rgba(36, 74, 127, 0.06);" 
+                                                onclick="toggleMoreMethods()">
+                                                <span class="text-[13px] font-normal text-[#126df7]">Еще способы</span>
+                                            </button>
+                                        ` : ''}
+                                        ${showMoreMethods ? `
+                                            ${paymentMethods.filter(method => ['sbp', 'card'].includes(method.value)).map(method => {
+                                                const isSelected = selectedPaymentMethod === method.value;
+                                                const opacity = isSelected ? '1' : '0.9';
+                                                
+                                                let buttonContent = method.label;
+                                                if (method.value === 'sbp') {
+                                                    buttonContent = `<img src="assets/SBP.png" alt="СБП по QR" class="h-[20px] w-auto">`;
+                                                }
+                                                
+                                                return `
+                                                <button onclick="selectPaymentMethod('${method.value}')" 
+                                                    class="w-full h-[44px] rounded-xl border-2 px-6 text-center flex items-center justify-center transition-all active:scale-95 ${isSelected ? 'transform scale-[1.02]' : 'hover:opacity-95'}"
+                                                    style="background-color: #FFFFFF; border: 1.5px solid #EAECEE; color: #000000; opacity: ${opacity};">
+                                                    ${buttonContent}
+                                                </button>
+                                                `;
+                                            }).join('')}
+                                            <button class="w-full min-h-[32px] flex items-center justify-center rounded-lg px-2 py-1 transition-all active:scale-95 hover:opacity-90" 
+                                                style="background-color: rgba(36, 74, 127, 0.06);" 
+                                                onclick="toggleMoreMethods()">
+                                                <span class="text-[13px] font-normal text-[#126df7]">Свернуть</span>
+                                            </button>
+                                        ` : ''}
                                     </div>
                                 </div>
                             </div>
@@ -704,6 +752,11 @@
         function selectPaymentMethod(method) {
             selectedPaymentMethod = method;
             processPayment();
+        }
+
+        function toggleMoreMethods() {
+            showMoreMethods = !showMoreMethods;
+            renderPreview();
         }
 
         function formatCardNumber(input) {
