@@ -612,6 +612,11 @@
         function openCreateModal() {
             editingLinkId = null;
             selectedLinkId = null;
+            // Очищаем временные значения из localStorage при открытии модального окна создания
+            localStorage.removeItem('tempCollectEmail');
+            localStorage.removeItem('tempEmailRequired');
+            localStorage.removeItem('tempCollectPhone');
+            localStorage.removeItem('tempPhoneRequired');
             const modalOverlay = document.getElementById('modalOverlay');
             const modalContent = document.getElementById('modalContent');
             
@@ -662,6 +667,13 @@
         function closeModal() {
             const modalOverlay = document.getElementById('modalOverlay');
             modalOverlay.style.display = 'none';
+            // Очищаем временные значения из localStorage при закрытии модального окна создания
+            if (editingLinkId === null) {
+                localStorage.removeItem('tempCollectEmail');
+                localStorage.removeItem('tempEmailRequired');
+                localStorage.removeItem('tempCollectPhone');
+                localStorage.removeItem('tempPhoneRequired');
+            }
             editingLinkId = null;
             render();
         }
@@ -805,10 +817,10 @@
             }
             const fixedAmount = link ? (link.fixedAmount || '') : '';
             const description = link ? (link.description || '') : '';
-            const collectEmail = link ? (link.collectEmail || false) : false;
-            const emailRequired = link ? (link.emailRequired || false) : false;
-            const collectPhone = link ? (link.collectPhone || false) : false;
-            const phoneRequired = link ? (link.phoneRequired || false) : false;
+            const collectEmail = link ? (link.collectEmail || false) : (localStorage.getItem('tempCollectEmail') === 'true');
+            const emailRequired = link ? (link.emailRequired || false) : (localStorage.getItem('tempEmailRequired') === 'true');
+            const collectPhone = link ? (link.collectPhone || false) : (localStorage.getItem('tempCollectPhone') === 'true');
+            const phoneRequired = link ? (link.phoneRequired || false) : (localStorage.getItem('tempPhoneRequired') === 'true');
 
             const shops = [
                 { value: 'Суши-бар Сакура', label: 'Суши-бар Сакура' },
@@ -1083,7 +1095,29 @@
         function toggleCollectEmail() {
             const linkId = editingLinkId || selectedLinkId;
             if (!linkId) {
-                console.warn('Сначала сохраните ссылку');
+                // Создание новой ссылки - сохраняем состояние в localStorage
+                const currentValue = localStorage.getItem('tempCollectEmail') === 'true';
+                localStorage.setItem('tempCollectEmail', (!currentValue).toString());
+                if (currentValue) {
+                    localStorage.setItem('tempEmailRequired', 'false');
+                }
+                // Перерисовываем форму
+                const modalContent = document.getElementById('modalContent');
+                if (modalContent) {
+                    modalContent.innerHTML = `
+                        <div class="p-6">
+                            <div class="mb-6 flex items-center justify-between">
+                                <h2 class="text-2xl font-medium text-black">Создать платёжную ссылку</h2>
+                                <button onclick="closeModal()" class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100" title="Закрыть">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            ${renderFormFields(null)}
+                        </div>
+                    `;
+                }
                 return;
             }
             const link = links.find(l => l.id === linkId);
@@ -1104,7 +1138,28 @@
         function toggleEmailRequired() {
             const linkId = editingLinkId || selectedLinkId;
             if (!linkId) {
-                console.warn('Сначала сохраните ссылку');
+                // Создание новой ссылки - сохраняем состояние в localStorage
+                const currentValue = localStorage.getItem('tempEmailRequired') === 'true';
+                const collectEmail = localStorage.getItem('tempCollectEmail') === 'true';
+                if (!collectEmail) return;
+                localStorage.setItem('tempEmailRequired', (!currentValue).toString());
+                // Перерисовываем форму
+                const modalContent = document.getElementById('modalContent');
+                if (modalContent) {
+                    modalContent.innerHTML = `
+                        <div class="p-6">
+                            <div class="mb-6 flex items-center justify-between">
+                                <h2 class="text-2xl font-medium text-black">Создать платёжную ссылку</h2>
+                                <button onclick="closeModal()" class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100" title="Закрыть">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            ${renderFormFields(null)}
+                        </div>
+                    `;
+                }
                 return;
             }
             const link = links.find(l => l.id === linkId);
@@ -1122,7 +1177,29 @@
         function toggleCollectPhone() {
             const linkId = editingLinkId || selectedLinkId;
             if (!linkId) {
-                console.warn('Сначала сохраните ссылку');
+                // Создание новой ссылки - сохраняем состояние в localStorage
+                const currentValue = localStorage.getItem('tempCollectPhone') === 'true';
+                localStorage.setItem('tempCollectPhone', (!currentValue).toString());
+                if (currentValue) {
+                    localStorage.setItem('tempPhoneRequired', 'false');
+                }
+                // Перерисовываем форму
+                const modalContent = document.getElementById('modalContent');
+                if (modalContent) {
+                    modalContent.innerHTML = `
+                        <div class="p-6">
+                            <div class="mb-6 flex items-center justify-between">
+                                <h2 class="text-2xl font-medium text-black">Создать платёжную ссылку</h2>
+                                <button onclick="closeModal()" class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100" title="Закрыть">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            ${renderFormFields(null)}
+                        </div>
+                    `;
+                }
                 return;
             }
             const link = links.find(l => l.id === linkId);
@@ -1143,7 +1220,28 @@
         function togglePhoneRequired() {
             const linkId = editingLinkId || selectedLinkId;
             if (!linkId) {
-                console.warn('Сначала сохраните ссылку');
+                // Создание новой ссылки - сохраняем состояние в localStorage
+                const currentValue = localStorage.getItem('tempPhoneRequired') === 'true';
+                const collectPhone = localStorage.getItem('tempCollectPhone') === 'true';
+                if (!collectPhone) return;
+                localStorage.setItem('tempPhoneRequired', (!currentValue).toString());
+                // Перерисовываем форму
+                const modalContent = document.getElementById('modalContent');
+                if (modalContent) {
+                    modalContent.innerHTML = `
+                        <div class="p-6">
+                            <div class="mb-6 flex items-center justify-between">
+                                <h2 class="text-2xl font-medium text-black">Создать платёжную ссылку</h2>
+                                <button onclick="closeModal()" class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100" title="Закрыть">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            ${renderFormFields(null)}
+                        </div>
+                    `;
+                }
                 return;
             }
             const link = links.find(l => l.id === linkId);
@@ -1211,13 +1309,22 @@
                     fixedAmountValue = parseAmount(formattedValue);
                 }
 
-                // Получаем значения дополнительных полей из состояния ссылки
+                // Получаем значения дополнительных полей из состояния ссылки или localStorage
                 const linkId = editingLinkId || selectedLinkId;
                 const link = linkId ? links.find(l => l.id === linkId) : null;
-                const collectEmailValue = link ? (link.collectEmail || false) : collectEmail;
-                const emailRequiredValue = link ? (link.emailRequired || false) : emailRequired;
-                const collectPhoneValue = link ? (link.collectPhone || false) : collectPhone;
-                const phoneRequiredValue = link ? (link.phoneRequired || false) : phoneRequired;
+                let collectEmailValue, emailRequiredValue, collectPhoneValue, phoneRequiredValue;
+                if (link) {
+                    collectEmailValue = link.collectEmail || false;
+                    emailRequiredValue = link.emailRequired || false;
+                    collectPhoneValue = link.collectPhone || false;
+                    phoneRequiredValue = link.phoneRequired || false;
+                } else {
+                    // При создании новой ссылки читаем из localStorage
+                    collectEmailValue = localStorage.getItem('tempCollectEmail') === 'true';
+                    emailRequiredValue = localStorage.getItem('tempEmailRequired') === 'true';
+                    collectPhoneValue = localStorage.getItem('tempCollectPhone') === 'true';
+                    phoneRequiredValue = localStorage.getItem('tempPhoneRequired') === 'true';
+                }
 
                 const linkData = {
                     title: titleEl.value || 'Без названия',
