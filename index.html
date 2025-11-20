@@ -618,22 +618,7 @@
             localStorage.removeItem('tempCollectPhone');
             localStorage.removeItem('tempPhoneRequired');
             const modalOverlay = document.getElementById('modalOverlay');
-            const modalContent = document.getElementById('modalContent');
-            
-            modalContent.innerHTML = `
-                <div class="p-6">
-                    <div class="mb-6 flex items-center justify-between">
-                        <h2 class="text-2xl font-medium text-black">Создать платёжную ссылку</h2>
-                        <button onclick="closeModal()" class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100" title="Закрыть">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
-                    </div>
-                    ${renderFormFields(null)}
-                </div>
-            `;
-            
+            renderCreateModalContent(null);
             modalOverlay.style.display = 'flex';
         }
 
@@ -851,7 +836,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="mb-3 block text-sm font-normal text-black">Режим суммы</label>
+                        <label class="mb-3 block text-sm font-normal text-black">Формат оплаты</label>
                         <div class="flex gap-3">
                             <button type="button" onclick="updateAmountMode('fixed')" 
                                 class="flex-1 rounded-xl px-4 py-2.5 text-sm font-normal text-black transition-colors hover:opacity-90 ${
@@ -962,6 +947,61 @@
                             Сохранить
                         </button>
                     </div>
+                </div>
+            `;
+        }
+
+        function getCurrentFormDraft() {
+            const titleEl = document.getElementById('linkTitle');
+            const merchantNameEl = document.getElementById('merchantName');
+            const amountModeEl = document.querySelector('input[name="amountMode"]:checked');
+            const fixedAmountEl = document.getElementById('fixedAmount');
+            const descriptionEl = document.getElementById('description');
+
+            let amountMode = 'fixed';
+            if (amountModeEl) {
+                amountMode = amountModeEl.value;
+            } else if (typeof Storage !== 'undefined') {
+                const tempMode = localStorage.getItem('tempAmountMode');
+                if (tempMode) {
+                    amountMode = tempMode;
+                }
+            }
+
+            const fixedAmountValue = fixedAmountEl ? parseAmount(fixedAmountEl.value || '0') : 0;
+
+            const collectEmail = localStorage.getItem('tempCollectEmail') === 'true';
+            const emailRequired = localStorage.getItem('tempEmailRequired') === 'true';
+            const collectPhone = localStorage.getItem('tempCollectPhone') === 'true';
+            const phoneRequired = localStorage.getItem('tempPhoneRequired') === 'true';
+
+            return {
+                title: titleEl ? titleEl.value : '',
+                merchantName: merchantNameEl ? merchantNameEl.value : 'Суши-бар Сакура',
+                amountMode,
+                fixedAmount: amountMode === 'fixed' ? fixedAmountValue : undefined,
+                description: descriptionEl ? descriptionEl.value : '',
+                collectEmail,
+                emailRequired: collectEmail ? emailRequired : false,
+                collectPhone,
+                phoneRequired: collectPhone ? phoneRequired : false
+            };
+        }
+
+        function renderCreateModalContent(draft) {
+            const modalContent = document.getElementById('modalContent');
+            if (!modalContent) return;
+            modalContent.innerHTML = `
+                <div class="p-6">
+                    <div class="mb-6 flex items-center justify-between">
+                        <h2 class="text-2xl font-medium text-black">Создать платёжную ссылку</h2>
+                        <button onclick="closeModal()" class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100" title="Закрыть">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    ${renderFormFields(draft || null)}
                 </div>
             `;
         }
@@ -1095,29 +1135,14 @@
         function toggleCollectEmail() {
             const linkId = editingLinkId || selectedLinkId;
             if (!linkId) {
-                // Создание новой ссылки - сохраняем состояние в localStorage
-                const currentValue = localStorage.getItem('tempCollectEmail') === 'true';
-                localStorage.setItem('tempCollectEmail', (!currentValue).toString());
-                if (currentValue) {
-                    localStorage.setItem('tempEmailRequired', 'false');
+                const draft = getCurrentFormDraft();
+                draft.collectEmail = !draft.collectEmail;
+                if (!draft.collectEmail) {
+                    draft.emailRequired = false;
                 }
-                // Перерисовываем форму
-                const modalContent = document.getElementById('modalContent');
-                if (modalContent) {
-                    modalContent.innerHTML = `
-                        <div class="p-6">
-                            <div class="mb-6 flex items-center justify-between">
-                                <h2 class="text-2xl font-medium text-black">Создать платёжную ссылку</h2>
-                                <button onclick="closeModal()" class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100" title="Закрыть">
-                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                </button>
-                            </div>
-                            ${renderFormFields(null)}
-                        </div>
-                    `;
-                }
+                localStorage.setItem('tempCollectEmail', draft.collectEmail.toString());
+                localStorage.setItem('tempEmailRequired', draft.emailRequired.toString());
+                renderCreateModalContent(draft);
                 return;
             }
             const link = links.find(l => l.id === linkId);
@@ -1138,28 +1163,11 @@
         function toggleEmailRequired() {
             const linkId = editingLinkId || selectedLinkId;
             if (!linkId) {
-                // Создание новой ссылки - сохраняем состояние в localStorage
-                const currentValue = localStorage.getItem('tempEmailRequired') === 'true';
-                const collectEmail = localStorage.getItem('tempCollectEmail') === 'true';
-                if (!collectEmail) return;
-                localStorage.setItem('tempEmailRequired', (!currentValue).toString());
-                // Перерисовываем форму
-                const modalContent = document.getElementById('modalContent');
-                if (modalContent) {
-                    modalContent.innerHTML = `
-                        <div class="p-6">
-                            <div class="mb-6 flex items-center justify-between">
-                                <h2 class="text-2xl font-medium text-black">Создать платёжную ссылку</h2>
-                                <button onclick="closeModal()" class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100" title="Закрыть">
-                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                </button>
-                            </div>
-                            ${renderFormFields(null)}
-                        </div>
-                    `;
-                }
+                const draft = getCurrentFormDraft();
+                if (!draft.collectEmail) return;
+                draft.emailRequired = !draft.emailRequired;
+                localStorage.setItem('tempEmailRequired', draft.emailRequired.toString());
+                renderCreateModalContent(draft);
                 return;
             }
             const link = links.find(l => l.id === linkId);
@@ -1177,29 +1185,14 @@
         function toggleCollectPhone() {
             const linkId = editingLinkId || selectedLinkId;
             if (!linkId) {
-                // Создание новой ссылки - сохраняем состояние в localStorage
-                const currentValue = localStorage.getItem('tempCollectPhone') === 'true';
-                localStorage.setItem('tempCollectPhone', (!currentValue).toString());
-                if (currentValue) {
-                    localStorage.setItem('tempPhoneRequired', 'false');
+                const draft = getCurrentFormDraft();
+                draft.collectPhone = !draft.collectPhone;
+                if (!draft.collectPhone) {
+                    draft.phoneRequired = false;
                 }
-                // Перерисовываем форму
-                const modalContent = document.getElementById('modalContent');
-                if (modalContent) {
-                    modalContent.innerHTML = `
-                        <div class="p-6">
-                            <div class="mb-6 flex items-center justify-between">
-                                <h2 class="text-2xl font-medium text-black">Создать платёжную ссылку</h2>
-                                <button onclick="closeModal()" class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100" title="Закрыть">
-                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                </button>
-                            </div>
-                            ${renderFormFields(null)}
-                        </div>
-                    `;
-                }
+                localStorage.setItem('tempCollectPhone', draft.collectPhone.toString());
+                localStorage.setItem('tempPhoneRequired', draft.phoneRequired.toString());
+                renderCreateModalContent(draft);
                 return;
             }
             const link = links.find(l => l.id === linkId);
@@ -1220,28 +1213,11 @@
         function togglePhoneRequired() {
             const linkId = editingLinkId || selectedLinkId;
             if (!linkId) {
-                // Создание новой ссылки - сохраняем состояние в localStorage
-                const currentValue = localStorage.getItem('tempPhoneRequired') === 'true';
-                const collectPhone = localStorage.getItem('tempCollectPhone') === 'true';
-                if (!collectPhone) return;
-                localStorage.setItem('tempPhoneRequired', (!currentValue).toString());
-                // Перерисовываем форму
-                const modalContent = document.getElementById('modalContent');
-                if (modalContent) {
-                    modalContent.innerHTML = `
-                        <div class="p-6">
-                            <div class="mb-6 flex items-center justify-between">
-                                <h2 class="text-2xl font-medium text-black">Создать платёжную ссылку</h2>
-                                <button onclick="closeModal()" class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100" title="Закрыть">
-                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                </button>
-                            </div>
-                            ${renderFormFields(null)}
-                        </div>
-                    `;
-                }
+                const draft = getCurrentFormDraft();
+                if (!draft.collectPhone) return;
+                draft.phoneRequired = !draft.phoneRequired;
+                localStorage.setItem('tempPhoneRequired', draft.phoneRequired.toString());
+                renderCreateModalContent(draft);
                 return;
             }
             const link = links.find(l => l.id === linkId);
