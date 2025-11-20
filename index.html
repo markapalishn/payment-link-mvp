@@ -378,7 +378,7 @@
     <script>
         // State management
         // Check for data version to ensure demo data is loaded
-        const DATA_VERSION = '2.1'; // Increment this when demo data changes
+        const DATA_VERSION = '3.0'; // Increment this when demo data changes
         const storedVersion = localStorage.getItem('paymentLinksVersion');
         let links = [];
         
@@ -400,29 +400,31 @@
         // Mock data on first load - load demo data if localStorage is empty
         if (links.length === 0) {
             links = [
+                // Онлайн Образование - 4 ссылки
                 {
                     id: '1',
-                    title: 'Оплата консультации',
-                    merchantName: 'Суши-бар Сакура',
+                    title: 'Курс программирования Python',
+                    merchantName: 'Онлайн Школа IT',
                     amountMode: 'fixed',
-                    fixedAmount: 1990,
-                    description: 'Оплата консультации',
+                    fixedAmount: 14900,
+                    description: 'Комплексный онлайн-курс по программированию на Python с нуля до уровня разработчика. Включает практические задания, проекты и сертификат об окончании.',
                     status: 'ready',
                     url: 'payment.com/link/1',
                     qrDataUrl: '',
-                    collectEmail: false,
-                    emailRequired: false,
-                    collectPhone: false,
+                    collectEmail: true,
+                    emailRequired: true,
+                    collectPhone: true,
                     phoneRequired: false,
                     createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
                     updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
                 },
                 {
                     id: '2',
-                    title: 'Поддержка проекта',
-                    merchantName: 'Рыбный рынок',
-                    amountMode: 'free',
-                    description: 'Поддержка проекта',
+                    title: 'Онлайн-курс английского языка',
+                    merchantName: 'Лингва Академия',
+                    amountMode: 'fixed',
+                    fixedAmount: 8990,
+                    description: 'Интерактивный курс английского языка для всех уровней. Групповые и индивидуальные занятия с носителями языка, доступ к платформе на 6 месяцев.',
                     status: 'ready',
                     url: 'payment.com/link/2',
                     qrDataUrl: '',
@@ -435,16 +437,15 @@
                 },
                 {
                     id: '3',
-                    title: 'Оплата доставки',
-                    merchantName: 'Морепродукты Дельфин',
-                    amountMode: 'fixed',
-                    fixedAmount: 500,
-                    description: 'Оплата доставки свежих морепродуктов',
+                    title: 'Подготовка к ЕГЭ по математике',
+                    merchantName: 'Учебный Центр "Отличник"',
+                    amountMode: 'free',
+                    description: 'Индивидуальная подготовка к ЕГЭ по математике. Персональный план обучения, разбор всех типов задач, пробные экзамены и консультации с опытными преподавателями.',
                     status: 'ready',
                     url: 'payment.com/link/3',
                     qrDataUrl: '',
                     collectEmail: true,
-                    emailRequired: false,
+                    emailRequired: true,
                     collectPhone: true,
                     phoneRequired: true,
                     createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
@@ -452,27 +453,29 @@
                 },
                 {
                     id: '4',
-                    title: 'Бронирование столика',
-                    merchantName: 'Суши-бар Сакура',
-                    amountMode: 'free',
-                    description: 'Предоплата за бронирование столика',
+                    title: 'Курс дизайна интерфейсов',
+                    merchantName: 'Дизайн Мастерская',
+                    amountMode: 'fixed',
+                    fixedAmount: 12900,
+                    description: 'Профессиональный курс по UI/UX дизайну. Изучение Figma, создание прототипов, работа с типографикой и цветом. Портфолио из 5 реальных проектов.',
                     status: 'ready',
                     url: 'payment.com/link/4',
                     qrDataUrl: '',
-                    collectEmail: false,
+                    collectEmail: true,
                     emailRequired: false,
                     collectPhone: true,
                     phoneRequired: false,
                     createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
                     updatedAt: new Date().toISOString()
                 },
+                // Дом и Ремонт - 4 ссылки
                 {
                     id: '5',
-                    title: 'Заказ на вынос',
-                    merchantName: 'Рыбный рынок',
+                    title: 'Консультация дизайнера интерьера',
+                    merchantName: 'Студия "Идеальный Дом"',
                     amountMode: 'fixed',
                     fixedAmount: 3500,
-                    description: 'Оплата заказа на вынос',
+                    description: 'Профессиональная консультация дизайнера по планированию интерьера вашего дома. План расстановки мебели, подбор цветовой схемы и рекомендации по материалам.',
                     status: 'ready',
                     url: 'payment.com/link/5',
                     qrDataUrl: '',
@@ -482,6 +485,55 @@
                     phoneRequired: true,
                     createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
                     updatedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString()
+                },
+                {
+                    id: '6',
+                    title: 'Ремонт ванной комнаты',
+                    merchantName: 'Ремонт Профи',
+                    amountMode: 'free',
+                    description: 'Комплексный ремонт ванной комнаты под ключ. Демонтаж старых покрытий, замена сантехники, укладка плитки, установка смесителей. Гарантия 2 года.',
+                    status: 'ready',
+                    url: 'payment.com/link/6',
+                    qrDataUrl: '',
+                    collectEmail: true,
+                    emailRequired: true,
+                    collectPhone: true,
+                    phoneRequired: true,
+                    createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+                    updatedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString()
+                },
+                {
+                    id: '7',
+                    title: 'Установка кухни',
+                    merchantName: 'Кухни Мастер',
+                    amountMode: 'fixed',
+                    fixedAmount: 12500,
+                    description: 'Установка готовой кухни нашими специалистами. Выезд на замер, профессиональный монтаж мебели, подключение техники и сборка. Бесплатная доставка.',
+                    status: 'ready',
+                    url: 'payment.com/link/7',
+                    qrDataUrl: '',
+                    collectEmail: true,
+                    emailRequired: false,
+                    collectPhone: true,
+                    phoneRequired: true,
+                    createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+                    updatedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
+                },
+                {
+                    id: '8',
+                    title: 'Покраска стен',
+                    merchantName: 'Ремонт Быстро',
+                    amountMode: 'free',
+                    description: 'Качественная покраска стен в квартире или доме. Подготовка поверхностей, грунтовка, нанесение краски в 2 слоя. Работаем аккуратно, защищаем мебель.',
+                    status: 'ready',
+                    url: 'payment.com/link/8',
+                    qrDataUrl: '',
+                    collectEmail: false,
+                    emailRequired: false,
+                    collectPhone: true,
+                    phoneRequired: true,
+                    createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+                    updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
                 }
             ];
             selectedLinkId = links[0].id;
@@ -640,9 +692,8 @@
             
             container.innerHTML = links.map(link => {
                 const actualLink = links.find(l => l.id === link.id) || link;
-                const isActive = actualLink.status === 'ready';
-                const statusColor = isActive ? 'bg-green-500' : 'bg-red-500';
-                const statusText = isActive ? 'Принимает платежи' : 'Снята с публикации';
+                const statusColor = 'bg-green-500';
+                const statusText = 'Принимает платежи';
                 const amountText = actualLink.amountMode === 'fixed' 
                     ? 'Фиксированно: ' + (actualLink.fixedAmount || 0).toLocaleString('ru-RU') + ' ₽' 
                     : 'Свободная сумма';
