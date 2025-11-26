@@ -787,7 +787,7 @@
 
         function renderFormFields(link) {
             const title = link ? link.title : '';
-            const merchantName = link ? link.merchantName : 'Суши-бар Сакура';
+            const merchantName = link ? link.merchantName : 'Онлайн Школа IT';
             // Определяем режим суммы: сначала из скрытых полей, потом из ссылки, потом из localStorage, потом по умолчанию
             let amountMode = 'fixed';
             const hiddenRadio = document.querySelector('input[name="amountMode"]:checked');
@@ -809,9 +809,16 @@
             const phoneRequired = link ? (link.phoneRequired || false) : (localStorage.getItem('tempPhoneRequired') === 'true');
 
             const shops = [
-                { value: 'Суши-бар Сакура', label: 'Суши-бар Сакура' },
-                { value: 'Рыбный рынок', label: 'Рыбный рынок' },
-                { value: 'Морепродукты Дельфин', label: 'Морепродукты Дельфин' }
+                // Онлайн образование
+                { value: 'Онлайн Школа IT', label: 'Онлайн Школа IT' },
+                { value: 'Лингва Академия', label: 'Лингва Академия' },
+                { value: 'Учебный Центр "Отличник"', label: 'Учебный Центр "Отличник"' },
+                { value: 'Дизайн Мастерская', label: 'Дизайн Мастерская' },
+                // Дом и ремонт
+                { value: 'Студия "Идеальный Дом"', label: 'Студия "Идеальный Дом"' },
+                { value: 'Ремонт Профи', label: 'Ремонт Профи' },
+                { value: 'Кухни Мастер', label: 'Кухни Мастер' },
+                { value: 'Ремонт Быстро', label: 'Ремонт Быстро' }
             ];
 
             // Форматируем фиксированную сумму для отображения
@@ -978,7 +985,7 @@
 
             return {
                 title: titleEl ? titleEl.value : '',
-                merchantName: merchantNameEl ? merchantNameEl.value : 'Суши-бар Сакура',
+                merchantName: merchantNameEl ? merchantNameEl.value : 'Онлайн Школа IT',
                 amountMode,
                 fixedAmount: amountMode === 'fixed' ? fixedAmountValue : undefined,
                 description: descriptionEl ? descriptionEl.value : '',
@@ -1305,7 +1312,7 @@
 
                 const linkData = {
                     title: titleEl.value || 'Без названия',
-                    merchantName: merchantNameEl.value || 'Суши-бар Сакура',
+                    merchantName: merchantNameEl.value || 'Онлайн Школа IT',
                     amountMode: amountMode || 'fixed',
                     fixedAmount: amountMode === 'fixed' && fixedAmountValue > 0 ? fixedAmountValue : undefined,
                     description: descriptionEl ? (descriptionEl.value || undefined) : undefined,

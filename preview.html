@@ -426,7 +426,7 @@
                     <div class="p-4 md:p-6 flex flex-col">
                         <div class="space-y-6">
                             <div>
-                                <h2 class="text-[40px] font-normal text-black leading-tight">${link.merchantName}</h2>
+                                <h2 class="text-[40px] font-normal text-black leading-tight">${link.title || link.merchantName}</h2>
                                 ${link.description ? `
                                     <p class="text-xl text-gray-500 mt-[10px]">${link.description}</p>
                                 ` : ''}
