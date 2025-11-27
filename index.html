@@ -379,7 +379,7 @@
     <script>
         // State management
         // Check for data version to ensure demo data is loaded
-        const DATA_VERSION = '3.0'; // Increment this when demo data changes
+        const DATA_VERSION = '3.1'; // Increment this when demo data changes
         const storedVersion = localStorage.getItem('paymentLinksVersion');
         let links = [];
         
@@ -416,6 +416,8 @@
                     emailRequired: true,
                     collectPhone: true,
                     phoneRequired: false,
+                    collectOrderDetails: false,
+                    orderDetailsRequired: false,
                     createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
                     updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
                 },
@@ -433,6 +435,8 @@
                     emailRequired: true,
                     collectPhone: false,
                     phoneRequired: false,
+                    collectOrderDetails: false,
+                    orderDetailsRequired: false,
                     createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
                     updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
                 },
@@ -449,6 +453,8 @@
                     emailRequired: true,
                     collectPhone: true,
                     phoneRequired: true,
+                    collectOrderDetails: false,
+                    orderDetailsRequired: false,
                     createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
                     updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
                 },
@@ -466,6 +472,8 @@
                     emailRequired: false,
                     collectPhone: true,
                     phoneRequired: false,
+                    collectOrderDetails: false,
+                    orderDetailsRequired: false,
                     createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
                     updatedAt: new Date().toISOString()
                 },
@@ -484,6 +492,8 @@
                     emailRequired: true,
                     collectPhone: true,
                     phoneRequired: true,
+                    collectOrderDetails: false,
+                    orderDetailsRequired: false,
                     createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
                     updatedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString()
                 },
@@ -500,6 +510,8 @@
                     emailRequired: true,
                     collectPhone: true,
                     phoneRequired: true,
+                    collectOrderDetails: false,
+                    orderDetailsRequired: false,
                     createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
                     updatedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString()
                 },
@@ -517,6 +529,8 @@
                     emailRequired: false,
                     collectPhone: true,
                     phoneRequired: true,
+                    collectOrderDetails: false,
+                    orderDetailsRequired: false,
                     createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
                     updatedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
                 },
@@ -533,6 +547,8 @@
                     emailRequired: false,
                     collectPhone: true,
                     phoneRequired: true,
+                    collectOrderDetails: false,
+                    orderDetailsRequired: false,
                     createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
                     updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
                 }
@@ -618,6 +634,8 @@
             localStorage.removeItem('tempEmailRequired');
             localStorage.removeItem('tempCollectPhone');
             localStorage.removeItem('tempPhoneRequired');
+            localStorage.removeItem('tempCollectOrderDetails');
+            localStorage.removeItem('tempOrderDetailsRequired');
             const modalOverlay = document.getElementById('modalOverlay');
             renderCreateModalContent(null);
             modalOverlay.style.display = 'flex';
@@ -659,6 +677,8 @@
                 localStorage.removeItem('tempEmailRequired');
                 localStorage.removeItem('tempCollectPhone');
                 localStorage.removeItem('tempPhoneRequired');
+                localStorage.removeItem('tempCollectOrderDetails');
+                localStorage.removeItem('tempOrderDetailsRequired');
             }
             editingLinkId = null;
             render();
@@ -807,6 +827,8 @@
             const emailRequired = link ? (link.emailRequired || false) : (localStorage.getItem('tempEmailRequired') === 'true');
             const collectPhone = link ? (link.collectPhone || false) : (localStorage.getItem('tempCollectPhone') === 'true');
             const phoneRequired = link ? (link.phoneRequired || false) : (localStorage.getItem('tempPhoneRequired') === 'true');
+            const collectOrderDetails = link ? (link.collectOrderDetails || false) : (localStorage.getItem('tempCollectOrderDetails') === 'true');
+            const orderDetailsRequired = link ? (link.orderDetailsRequired || false) : (localStorage.getItem('tempOrderDetailsRequired') === 'true');
 
             const shops = [
                 // Онлайн образование
@@ -918,6 +940,37 @@
                             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
                                 <div class="flex items-center justify-between mb-3">
                                     <div>
+                                        <label class="text-sm font-normal text-black">Собирать подробности о заказе</label>
+                                        <p class="text-xs text-gray-500 mt-0.5">Добавить поле комментария клиента</p>
+                                    </div>
+                                    <button type="button" onclick="toggleCollectOrderDetails()" 
+                                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors hover:opacity-90 ${
+                                            collectOrderDetails ? '' : 'opacity-50'
+                                        }" style="background-color: ${collectOrderDetails ? '#DED0BB' : '#E5E7EB'};">
+                                        <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${
+                                            collectOrderDetails ? 'translate-x-6' : 'translate-x-1'
+                                        }"></span>
+                                    </button>
+                                </div>
+                                ${collectOrderDetails ? `
+                                    <div class="mt-3 pt-3 border-t border-gray-200">
+                                        <div class="flex items-center justify-between">
+                                            <label class="text-sm text-black">Обязательное поле</label>
+                                            <button type="button" onclick="toggleOrderDetailsRequired()" 
+                                                class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors hover:opacity-90 ${
+                                                    orderDetailsRequired ? '' : 'opacity-50'
+                                                }" style="background-color: ${orderDetailsRequired ? '#DED0BB' : '#E5E7EB'};">
+                                                <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow-sm ${
+                                                    orderDetailsRequired ? 'translate-x-5' : 'translate-x-0.5'
+                                                }"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div>
                                         <label class="text-sm font-normal text-black">Собирать номер телефона</label>
                                         <p class="text-xs text-gray-500 mt-0.5">Добавить поле телефона в форму оплаты</p>
                                     </div>
@@ -982,6 +1035,8 @@
             const emailRequired = localStorage.getItem('tempEmailRequired') === 'true';
             const collectPhone = localStorage.getItem('tempCollectPhone') === 'true';
             const phoneRequired = localStorage.getItem('tempPhoneRequired') === 'true';
+            const collectOrderDetails = localStorage.getItem('tempCollectOrderDetails') === 'true';
+            const orderDetailsRequired = localStorage.getItem('tempOrderDetailsRequired') === 'true';
 
             return {
                 title: titleEl ? titleEl.value : '',
@@ -992,7 +1047,9 @@
                 collectEmail,
                 emailRequired: collectEmail ? emailRequired : false,
                 collectPhone,
-                phoneRequired: collectPhone ? phoneRequired : false
+                phoneRequired: collectPhone ? phoneRequired : false,
+                collectOrderDetails,
+                orderDetailsRequired: collectOrderDetails ? orderDetailsRequired : false
             };
         }
 
@@ -1240,6 +1297,54 @@
             }
         }
 
+        function toggleCollectOrderDetails() {
+            const linkId = editingLinkId || selectedLinkId;
+            if (!linkId) {
+                const draft = getCurrentFormDraft();
+                draft.collectOrderDetails = !draft.collectOrderDetails;
+                if (!draft.collectOrderDetails) {
+                    draft.orderDetailsRequired = false;
+                }
+                localStorage.setItem('tempCollectOrderDetails', draft.collectOrderDetails.toString());
+                localStorage.setItem('tempOrderDetailsRequired', draft.orderDetailsRequired.toString());
+                renderCreateModalContent(draft);
+                return;
+            }
+            const link = links.find(l => l.id === linkId);
+            if (link) {
+                link.collectOrderDetails = !link.collectOrderDetails;
+                if (!link.collectOrderDetails) {
+                    link.orderDetailsRequired = false;
+                }
+                saveState();
+                renderLinksList();
+                if (editingLinkId === linkId) {
+                    openEditModal(linkId);
+                }
+            }
+        }
+
+        function toggleOrderDetailsRequired() {
+            const linkId = editingLinkId || selectedLinkId;
+            if (!linkId) {
+                const draft = getCurrentFormDraft();
+                if (!draft.collectOrderDetails) return;
+                draft.orderDetailsRequired = !draft.orderDetailsRequired;
+                localStorage.setItem('tempOrderDetailsRequired', draft.orderDetailsRequired.toString());
+                renderCreateModalContent(draft);
+                return;
+            }
+            const link = links.find(l => l.id === linkId);
+            if (link && link.collectOrderDetails) {
+                link.orderDetailsRequired = !link.orderDetailsRequired;
+                saveState();
+                renderLinksList();
+                if (editingLinkId === linkId) {
+                    openEditModal(linkId);
+                }
+            }
+        }
+
         function updateDescCount() {
             const desc = document.getElementById('description').value;
             document.getElementById('descCount').textContent = desc.length;
@@ -1296,18 +1401,22 @@
                 // Получаем значения дополнительных полей из состояния ссылки или localStorage
                 const linkId = editingLinkId || selectedLinkId;
                 const link = linkId ? links.find(l => l.id === linkId) : null;
-                let collectEmailValue, emailRequiredValue, collectPhoneValue, phoneRequiredValue;
+                let collectEmailValue, emailRequiredValue, collectPhoneValue, phoneRequiredValue, collectOrderDetailsValue, orderDetailsRequiredValue;
                 if (link) {
                     collectEmailValue = link.collectEmail || false;
                     emailRequiredValue = link.emailRequired || false;
                     collectPhoneValue = link.collectPhone || false;
                     phoneRequiredValue = link.phoneRequired || false;
+                    collectOrderDetailsValue = link.collectOrderDetails || false;
+                    orderDetailsRequiredValue = link.orderDetailsRequired || false;
                 } else {
                     // При создании новой ссылки читаем из localStorage
                     collectEmailValue = localStorage.getItem('tempCollectEmail') === 'true';
                     emailRequiredValue = localStorage.getItem('tempEmailRequired') === 'true';
                     collectPhoneValue = localStorage.getItem('tempCollectPhone') === 'true';
                     phoneRequiredValue = localStorage.getItem('tempPhoneRequired') === 'true';
+                    collectOrderDetailsValue = localStorage.getItem('tempCollectOrderDetails') === 'true';
+                    orderDetailsRequiredValue = localStorage.getItem('tempOrderDetailsRequired') === 'true';
                 }
 
                 const linkData = {
@@ -1320,6 +1429,8 @@
                     emailRequired: emailRequiredValue,
                     collectPhone: collectPhoneValue,
                     phoneRequired: phoneRequiredValue,
+                    collectOrderDetails: collectOrderDetailsValue,
+                    orderDetailsRequired: orderDetailsRequiredValue,
                     status: 'draft'
                 };
                 
@@ -1351,6 +1462,8 @@
                         emailRequired: linkData.emailRequired,
                         collectPhone: linkData.collectPhone,
                         phoneRequired: linkData.phoneRequired,
+                        collectOrderDetails: linkData.collectOrderDetails,
+                        orderDetailsRequired: linkData.orderDetailsRequired,
                         status: 'ready', // Новая ссылка сразу становится опубликованной
                         url: `payment.com/link/${newLinkId}`, // Генерируем URL сразу с тем же ID
                         createdAt: new Date().toISOString(),
